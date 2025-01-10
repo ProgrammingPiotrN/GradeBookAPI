@@ -1,16 +1,43 @@
 ﻿using GradeBook.Domain.Abstractions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using GradeBook.Domain.Entities;
+using GradeBook.Infrastructure.Context;
+using Microsoft.EntityFrameworkCore;
 
 namespace GradeBook.Infrastructure;
 
 internal class UnitOfWork : IUnitOfWork
 {
-    public Task SaveChangesAsync(CancellationToken cancellationToken = default)
+    private readonly GradeBookDbContext _gradeBookDbContext;
+
+    public UnitOfWork(GradeBookDbContext gradeBookDbContext)
     {
-        throw new NotImplementedException();
+        _gradeBookDbContext = gradeBookDbContext;
+    }
+
+    public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        UpdateAuditableEntites();
+        await _gradeBookDbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private void UpdateAuditableEntites()
+    {
+        var entries = _gradeBookDbContext
+            .ChangeTracker
+            .Entries<Entity>();
+
+        foreach (var entry in entries)
+        {
+            if (entry.State == EntityState.Added)
+            {
+                entry.Entity.CreatedAt = entry.Entity.UpdatedAt = DateTime.Now;
+            }
+
+            if (entry.State == EntityState.Modified)
+            {
+                entry.Entity.UpdatedAt = DateTime.Now;
+            }
+        }
+
     }
 }
