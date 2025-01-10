@@ -1,5 +1,7 @@
 ﻿using GradeBook.Domain.Abstractions;
 using GradeBook.Domain.Entities;
+using GradeBook.Infrastructure.Context;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,38 +12,45 @@ namespace GradeBook.Infrastructure.Repositories;
 
 internal class StudentRepository : IStudentRepository
 {
-    public Task<IEnumerable<Student>> GetAllAsync(CancellationToken cancellationToken = default)
+    private readonly GradeBookDbContext _gradeBookDbContext;
+
+    public StudentRepository(GradeBookDbContext gradeBookDbContext)
     {
-        throw new NotImplementedException();
+        _gradeBookDbContext = gradeBookDbContext;
     }
 
-    public Task<Student> GetByEamilAsync(string email, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Student>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await _gradeBookDbContext.Students.ToListAsync(cancellationToken);
     }
 
-    public Task<Student> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<Student> GetByEamilAsync(string email, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await _gradeBookDbContext.Students.SingleOrDefaultAsync(s => s.Email == email, cancellationToken);
+    }
+
+    public async Task<Student> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    {
+        return await _gradeBookDbContext.Students.SingleOrDefaultAsync(s => s.Id == id, cancellationToken);
     }
 
     public Task<bool> IsAlreadyExistsAsync(string email, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return _gradeBookDbContext.Students.AnyAsync(s => s.Email == email, cancellationToken);
     }
 
     public void AddStudent(Student student)
     {
-        throw new NotImplementedException();
+        _gradeBookDbContext.Students.Add(student);
     }
 
     public void DeleteStudent(Student student)
     {
-        throw new NotImplementedException();
+        _gradeBookDbContext.Students.Remove(student);
     }
 
     public void UpdateStudent(Student student)
     {
-        throw new NotImplementedException();
+        _gradeBookDbContext.Students.Update(student);
     }
 }
